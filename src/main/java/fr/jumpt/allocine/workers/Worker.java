@@ -1,5 +1,7 @@
 package fr.jumpt.allocine.workers;
 
+import java.util.List;
+
 import org.jsoup.nodes.Document;
 
 /**
@@ -7,12 +9,10 @@ import org.jsoup.nodes.Document;
  * @author Julien
  *
  */
-public interface Worker {
+public interface Worker<T> {
 
-	void load();
-	
-	void load(Integer paramId);
-	
+	List<T> load();
+		
 	void processHtml(final Document document);
 	
 }
