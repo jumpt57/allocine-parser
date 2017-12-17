@@ -1,74 +1,59 @@
 package fr.jumpt.allocine;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
 import fr.jumpt.allocine.models.Movie;
 import fr.jumpt.allocine.workers.MovieWorker;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
- * 
  * @author Julien
- *
  */
 public class Application {
 
-	public final static int MAX_THREAD = 256;
+    private final static int MAX_THREAD = 256;
 
-	private List<Movie> movies;
+    private List<Movie> movies;
 
-	public static void main(String[] args) {
-		Application app = new Application();
-		app.start();
-	}
+    private Application() {
+        movies = new ArrayList<>();
+    }
 
-	public Application() {
-		movies = new ArrayList<>();
-	}
+    public static void main(String[] args) {
+        Application app = new Application();
+        app.start();
+    }
 
-	public void start() {
-		System.out.println("Application started !");
+    private void start() {
+        System.out.println("Application started !");
 
-		ExecutorService excutor = Executors.newFixedThreadPool(MAX_THREAD);
-		List<Callable<List<Movie>>> tasks = new ArrayList<>();
+        ExecutorService executor = Executors.newFixedThreadPool(MAX_THREAD);
+        List<Callable<Object>> tasks = new ArrayList<>();
 
-		for (int i = 0; i < MAX_THREAD; i++) {
+        for (int i = 0; i < MAX_THREAD; i++) {
 
-			final int currentThreadCount = i;
+            final int currentThreadCount = i;
 
-			Callable<List<Movie>> task = () -> {
+            Runnable task = () -> {
+                MovieWorker.init(MAX_THREAD, currentThreadCount).load();
+            };
 
-				MovieWorker movieWorker = new MovieWorker(Thread.currentThread(), MAX_THREAD, currentThreadCount);
-				return movieWorker.load();
-			};
+            tasks.add(Executors.callable(task));
+        }
 
-			tasks.add(task);
-		}
+        try {
+            executor.invokeAll(tasks);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            executor.shutdownNow();
 
-		try {
-			List<Future<List<Movie>>> futures = excutor.invokeAll(tasks);
+            System.out.println("End of loading with " + movies.size());
+        }
 
-			for (Future<List<Movie>> future : futures) {
-				try {
-					movies.addAll(future.get());
-				} catch (ExecutionException e) {
-					e.printStackTrace();
-				}
-			}
-			
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} finally {
-			excutor.shutdownNow();
-
-			System.out.println("End of loading with " + movies.size());
-		}
-
-	}
+    }
 
 }
