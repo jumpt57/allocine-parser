@@ -10,11 +10,11 @@ public enum KeyWordsHelper {
     DE("De"),
     AVEC("Avec"),
     GENRES("Genres"),
-    NATIONALITE("Nationalit�"),
+    NATIONALITE("Nationalité"),
     THREED("3D"),
     DASH("-"),
     PLUS("plus"),
-    INCONNUE("inconnue "),
+    INCONNUE("inconnue"),
     VOD("VOD");
 
     private String value;
