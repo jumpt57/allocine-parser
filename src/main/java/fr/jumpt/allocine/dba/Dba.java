@@ -4,6 +4,9 @@ import com.mongodb.MongoClient;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 
+/**
+ *
+ */
 public class Dba {
 
     private final static Dba DBA = new Dba();

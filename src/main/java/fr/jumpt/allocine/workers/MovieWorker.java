@@ -18,6 +18,7 @@ public class MovieWorker implements Worker<Movie> {
 
     private Integer movieNumber = 0;
     private Integer timeout = 10;
+    private Integer max;
 
     private Integer currentMovieId;
     private Integer step;
@@ -26,9 +27,10 @@ public class MovieWorker implements Worker<Movie> {
      * @param step
      * @param startingMovieId
      */
-    private MovieWorker(final Integer step, final Integer startingMovieId) {
+    private MovieWorker(final Integer step, Integer startingMovieId, Integer max) {
         this.step = step;
         this.currentMovieId = startingMovieId;
+        this.max = max;
     }
 
     /**
@@ -36,19 +38,20 @@ public class MovieWorker implements Worker<Movie> {
      * @param startingMovieId
      * @return
      */
-    public static MovieWorker init(final Integer step, final Integer startingMovieId) {
-        return new MovieWorker(step, startingMovieId);
+    public static MovieWorker init(Integer step, Integer startingMovieId, Integer max) {
+        return new MovieWorker(step, startingMovieId, max);
     }
 
     /**
      *
      */
+    @Override
     public void load() {
         System.out.println("starting worker on thrad " + Thread.currentThread().getName());
 
         boolean lastMovieFound = false;
 
-        while (!lastMovieFound && movieNumber != 10) {
+        while (!lastMovieFound && !movieNumber.equals(max)) {
             String movieUrl = LinksHelper.FICHE_FILM.getValue().replace("{id}", currentMovieId.toString());
 
             try {
@@ -75,39 +78,51 @@ public class MovieWorker implements Worker<Movie> {
     /**
      *
      */
+    @Override
     public Movie processHtml(final Document document) {
         Movie movie = new Movie();
         movie.setId(currentMovieId);
 
-        Element titleBar = document.selectFirst(HtmlHelper.TITLEBAR.getValue());
+        Element titleBar = document.selectFirst(HtmlHelper.TITLE_BAR.getValue());
         movie.setTitle(MovieProcessor.title(titleBar));
 
-        Elements metaBody = document.select(HtmlHelper.META_BODY_HELPER.getValue());
-        for (Element el : metaBody) {
-            if (el.text().contains(KeyWordsHelper.DATE_DE_REPRISE.getValue())) {
+        document.select(HtmlHelper.META_BODY_HELPER.getValue()).stream().forEach(el -> {
+            if (el.text().startsWith(KeyWordsHelper.DATE_DE_REPRISE.getValue())) {
                 movie.setReReleaseDate(MovieProcessor.reReleaseDate(el));
-            } else if (el.text().contains(KeyWordsHelper.DATE_DE_SORTIE.getValue())) {
+            } else if (el.text().startsWith(KeyWordsHelper.DATE_DE_SORTIE.getValue())) {
                 movie.setReleaseDate(MovieProcessor.releaseDate(el));
                 movie.setLength(MovieProcessor.length(el));
-            } else if (el.text().contains(KeyWordsHelper.DE.getValue())) {
-                movie.setDirectors(MovieProcessor.directors(metaBody.get(1)));
-            } else if (el.text().contains(KeyWordsHelper.AVEC.getValue())) {
+            } else if (el.text().startsWith(KeyWordsHelper.DE.getValue())) {
+                movie.setDirectors(MovieProcessor.directors(el));
+            } else if (el.text().startsWith(KeyWordsHelper.AVEC.getValue())) {
                 movie.setActors(MovieProcessor.actors(el));
-            } else if (el.text().contains(KeyWordsHelper.GENRES.getValue())) {
+            } else if (el.text().startsWith(KeyWordsHelper.GENRE.getValue())) {
                 movie.setGenres(MovieProcessor.genres(el));
-            } else if (el.text().contains(KeyWordsHelper.NATIONALITE.getValue())) {
+            } else if (el.text().startsWith(KeyWordsHelper.NATIONALITE.getValue())) {
                 movie.setNationalities(MovieProcessor.nationalities(el));
             }
-        }
+        });
 
-        Element synopsis = document.selectFirst(HtmlHelper.SYNOPSIS.getValue());
+        Element synopsis = document.select(HtmlHelper.SYNOPSIS.getValue()).first();
         movie.setSynopsis(MovieProcessor.synopsis(synopsis));
 
-        Element ageLimit = document.selectFirst(HtmlHelper.AGE_LIMIT.getValue());
+        Element ageLimit = document.select(HtmlHelper.AGE_LIMIT.getValue()).first();
         movie.setAgeLimit(MovieProcessor.ageLimit(ageLimit));
 
-        Element poster = document.selectFirst(HtmlHelper.POSTER.getValue());
+        Element poster = document.select(HtmlHelper.POSTER.getValue()).first();
+        if(poster == null){
+            poster = document.select(HtmlHelper.POSTER_DIV.getValue()).first();
+        }
         movie.setPoster(MovieProcessor.poster(poster));
+
+        document.select(HtmlHelper.DETAIL.getValue()).stream().forEach(el -> {
+            if(el.text().startsWith(KeyWordsHelper.ANNEE_PRODUCTION.getValue())){
+                movie.setYear(MovieProcessor.year(el));
+            }
+            else if(el.text().startsWith(KeyWordsHelper.TYPE_FILM.getValue())){
+                movie.setType(MovieProcessor.type(el));
+            }
+        });
 
         System.out.println(Thread.currentThread().getName() + " " + movie.toString());
 

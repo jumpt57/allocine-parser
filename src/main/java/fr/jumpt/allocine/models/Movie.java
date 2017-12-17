@@ -39,6 +39,10 @@ public class Movie {
 
     private String poster;
 
+    private String type;
+
+    private Integer year;
+
     public Movie() {
         super();
     }
@@ -139,9 +143,25 @@ public class Movie {
         this.reReleaseDate = reReleaseDate;
     }
 
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public Integer getYear() {
+        return year;
+    }
+
+    public void setYear(Integer year) {
+        this.year = year;
+    }
+
     @Override
     public String toString() {
-        return id + " " + title + " " + releaseDate;
+        return id + " " + title + " " + year;
     }
 
 }

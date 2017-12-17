@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
 
 /**
  * @author Julien
@@ -15,6 +16,8 @@ import java.util.concurrent.Executors;
 public class Application {
 
     private final static int MAX_THREAD = 256;
+
+    private final static int MAX_MOVIES = 100;
 
     private List<Movie> movies;
 
@@ -33,16 +36,13 @@ public class Application {
         ExecutorService executor = Executors.newFixedThreadPool(MAX_THREAD);
         List<Callable<Object>> tasks = new ArrayList<>();
 
-        for (int i = 0; i < MAX_THREAD; i++) {
-
+        IntStream.range(0, MAX_THREAD).forEach(i -> {
             final int currentThreadCount = i;
 
-            Runnable task = () -> {
-                MovieWorker.init(MAX_THREAD, currentThreadCount).load();
-            };
+            Runnable task = () -> MovieWorker.init(MAX_THREAD, currentThreadCount, MAX_MOVIES).load();
 
             tasks.add(Executors.callable(task));
-        }
+        });
 
         try {
             executor.invokeAll(tasks);

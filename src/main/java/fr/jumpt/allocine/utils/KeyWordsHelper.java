@@ -10,12 +10,15 @@ public enum KeyWordsHelper {
     DE("De"),
     AVEC("Avec"),
     GENRES("Genres"),
+    GENRE("Genre"),
     NATIONALITE("Nationalité"),
     THREED("3D"),
     DASH("-"),
     PLUS("plus"),
     INCONNUE("inconnue"),
-    VOD("VOD");
+    VOD("VOD"),
+    ANNEE_PRODUCTION("Année de production"),
+    TYPE_FILM("Type de film");
 
     private String value;
 

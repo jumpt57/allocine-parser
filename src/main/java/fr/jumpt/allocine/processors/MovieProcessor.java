@@ -2,6 +2,7 @@ package fr.jumpt.allocine.processors;
 
 import fr.jumpt.allocine.utils.KeyWordsHelper;
 import fr.jumpt.allocine.utils.MonthHelper;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Element;
 
 import java.text.DateFormat;
@@ -141,7 +142,7 @@ public class MovieProcessor {
         String data = element.text();
         String[] dataArray = data.replace(KeyWordsHelper.DE.getValue(), "").trim().split("\\,");
 
-        return Arrays.asList(dataArray).stream().map(dirctor -> dirctor.trim()).collect(Collectors.toList());
+        return Arrays.asList(dataArray).stream().map(director -> director.trim()).collect(Collectors.toList());
     }
 
     /**
@@ -190,7 +191,12 @@ public class MovieProcessor {
         }
 
         String data = element.text();
-        String[] dataArray = data.replace(KeyWordsHelper.GENRES.getValue(), "").split("\\,");
+
+        String[] dataArray = data.replace(KeyWordsHelper.GENRE.getValue(), "").split("\\,");
+
+        if(data.contains(KeyWordsHelper.GENRES.getValue())){
+            dataArray = data.replace(KeyWordsHelper.GENRES.getValue(), "").split("\\,");
+        }
 
         return Arrays.asList(dataArray).stream().map(genre -> genre.trim()).collect(Collectors.toList());
     }
@@ -208,7 +214,7 @@ public class MovieProcessor {
         String data = element.text();
         String[] dataArray = data.replace(KeyWordsHelper.NATIONALITE.getValue(), "").split("\\,");
 
-        return Arrays.asList(dataArray).stream().map(nationality -> nationality.trim()).collect(Collectors.toList());
+        return Arrays.asList(dataArray).stream().map(nationality -> StringUtils.capitalize(nationality.trim())).collect(Collectors.toList());
     }
 
     /**
@@ -248,6 +254,34 @@ public class MovieProcessor {
         }
 
         return element.absUrl("src");
+    }
+
+    /**
+     *
+     * @param element
+     * @return
+     */
+    public static Integer year(Element element){
+
+        if (element == null) {
+            return null;
+        }
+
+        return Integer.parseInt(element.text().replace(KeyWordsHelper.ANNEE_PRODUCTION.getValue(), "").trim());
+    }
+
+    /**
+     *
+     * @param element
+     * @return
+     */
+    public static String type(Element element) {
+
+        if (element == null) {
+            return null;
+        }
+
+        return element.text().replace(KeyWordsHelper.TYPE_FILM.getValue(), "").trim();
     }
 
 }
